@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azota CKI - Giáng Sinh 2025</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --btn-subject: #ffffff;
+            --btn-subject-text: #0f2027;
+            --btn-back: #ef5350;
+            --btn-history: #ffa726;
+            --btn-disabled: #546e7a; /* Màu xám cho nút bị khóa */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+            overflow: hidden; /* Ngăn thanh cuộn body */
+            position: relative;
+        }
+
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.37);
+            z-index: 10;
+            max-height: 90vh;
+            overflow-y: auto; /* Cuộn nội dung bên trong container */
+        }
+        
+        .container::-webkit-scrollbar { width: 0; background: transparent; }
+
+        h1 { font-size: 1.8rem; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        h2 { font-size: 1.4rem; margin-bottom: 15px; color: #ffeb3b; }
+
+        .grid-menu { display: flex; flex-direction: column; gap: 12px; }
+
+        .btn {
+            display: block;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            border: none;
+            width: 100%;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-subject { background-color: var(--btn-subject); color: var(--btn-subject-text); }
+        .btn-history { background-color: var(--btn-history); color: #fff; margin-top: 10px;}
+        .btn-back { background-color: var(--btn-back); color: #fff; margin-top: 20px; }
+
+        /* Class màu xám - không nhấn được */
+        .btn-disabled {
+            background-color: var(--btn-disabled) !important;
+            color: #cfd8dc !important;
+            cursor: not-allowed;
+            pointer-events: none; /* Chặn click chuột */
+            opacity: 0.7;
+            box-shadow: none;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Hiệu ứng chuyển cảnh mượt mà */
+        .fade-in-up {
+            animation: fadeInUp 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .filter-box {
+            margin-bottom: 15px;
+            padding: 10px;
+            width: 100%;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .history-list {
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.9rem;
+        }
+        .history-item:last-child { border-bottom: none; }
+        .history-item span { color: #ffeb3b; font-weight: bold; }
+
+        .snowflake {
+            position: absolute;
+            top: -30px;
+            color: #fff;
+            font-size: 1em;
+            pointer-events: none;
+            z-index: 1;
+            will-change: transform;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app-container">
+        <div class="decoration" style="font-size: 3rem; margin-bottom: 10px;">🎄</div>
+        
+        <div id="view-home" class="fade-in-up">
+            <h1>AZOTA CKI <br><span style="font-size: 1rem; font-weight: 400;">2025-2026</span></h1>
+            <div class="grid-menu" id="main-menu">
+                </div>
+            <button class="btn btn-history" onclick="showHistory()">⏳ Lịch sử thay đổi đáp án</button>
+        </div>
+
+        <div id="view-subject" class="hidden">
+            <h2 id="subject-title">Môn Học</h2>
+            <div class="grid-menu" id="sub-menu"></div>
+            <button class="btn btn-back" onclick="goHome()">⬅️ Quay lại trang chủ</button>
+        </div>
+
+        <div id="view-history" class="hidden">
+            <h2>Lịch sử thay đổi</h2>
+            <select id="subject-filter" class="filter-box" onchange="filterHistory()">
+                <option value="all">-- Tất cả các môn --</option>
+            </select>
+            <div class="history-list" id="history-content"></div>
+            <button class="btn btn-back" onclick="goHome()">⬅️ Quay lại trang chủ</button>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // CẤU HÌNH (CONFIG)
+        // ==========================================
+        const subjectConfig = {
+            "Toán": {
+                name: "Toán 📐",
+                locked: true, 
+                parts: [
+                    { name: "Phần 1", link: "" },
+                    { name: "Phần 2", link: "" },
+                    { name: "Phần 3", link: "" },
+                    { name: "Phần 1+2", link: "" },
+                    { name: "FULL", link: "" }
+                ]
+            },
+            "Vật Lý": {
+                name: "Vật lý ⚛️",
+                locked: false,
+                parts: [
+                    { name: "Phần 1", link: "https://azota.vn/de-thi/3d3tfu" },
+                    { name: "Phần 2", link: "https://azota.vn/de-thi/ilz6uu" },
+                    { name: "Phần 3", link: "" },
+                    { name: "Phần 1+2", link: "https://azota.vn/de-thi/wjkseb" },
+                    { name: "FULL", link: "" }
+                ]
+            },
+            "Hóa Học": {
+                name: "Hóa học 🧪",
+                locked: false,
+                parts: [
+                    { name: "Phần 1", link: "" },
+                    { name: "Phần 2", link: "https://azota.vn/de-thi/nmplut" },
+                    { name: "Phần 3", link: "" },
+                    { name: "Phần 1+2", link: "" },
+                    { name: "FULL", link: "" }
+                ]
+            },
+            // CÁC MÔN BÊN DƯỚI ĐANG BỊ KHÓA (locked: true)
+            "Địa Lý": {
+                name: "Địa lý 🌍",
+                locked: true, 
+                parts: [
+                    { name: "Phần 1", link: "" },
+                    { name: "Phần 2", link: "" },
+                    { name: "Phần 3", link: "" },
+                    { name: "Phần 1+2", link: "" },
+                    { name: "FULL", link: "" }
+                ]
+            },
+            "Lịch Sử": {
+                name: "Lịch sử 📜",
+                locked: true,
+                parts: [
+                    { name: "Phần 1", link: "" },
+                    { name: "Phần 2", link: "" },
+                    { name: "FULL", link: "" }
+                ]
+            },
+            "GDKT & PL": {
+                name: "GDKT & PL ⚖️",
+                locked: true,
+                parts: [
+                    { name: "Phần 1", link: "" },
+                    { name: "Phần 2", link: "" },
+                    { name: "FULL", link: "" }
+                ]
+            }
+        };
+
+        const historyData = [
+            { subject: "Toán", time: "10:30 19/12", content: "test" },
+            { subject: "Vật Lý", time: "09:15 19/12", content: "test" },
+            { subject: "Hóa Học", time: "08:00 18/12", content: "test" },
+            { subject: "Toán", time: "15:00 18/12", content: "test" },
+            { subject: "Địa Lý", time: "14:20 17/12", content: "test" }
+        ];
+
+        // ==========================================
+        // XỬ LÝ GIAO DIỆN (LOGIC)
+        // ==========================================
+
+        function initApp() {
+            const mainMenu = document.getElementById('main-menu');
+            const filterSelect = document.getElementById('subject-filter');
+            
+            for (let key in subjectConfig) {
+                const data = subjectConfig[key];
+                
+                // Tạo nút môn học
+                let btn = document.createElement('button');
+                btn.className = 'btn btn-subject';
+                btn.innerHTML = data.name;
+
+                // Kiểm tra xem có bị khóa không
+                if (data.locked === true) {
+                    btn.classList.add('btn-disabled'); // Thêm class xám
+                } else {
+                    btn.onclick = () => openSubject(key);
+                }
+                
+                mainMenu.appendChild(btn);
+
+                // Thêm vào bộ lọc lịch sử
+                let option = document.createElement('option');
+                option.value = key;
+                option.text = data.name;
+                filterSelect.appendChild(option);
+            }
+        }
+
+        function openSubject(key) {
+            const data = subjectConfig[key];
+            document.getElementById('subject-title').innerHTML = data.name;
+            const subMenu = document.getElementById('sub-menu');
+            subMenu.innerHTML = '';
+
+            data.parts.forEach(part => {
+                let a = document.createElement('a');
+                a.className = 'btn btn-subject';
+                a.innerText = part.name;
+                
+                if (part.link && part.link.trim() !== "") {
+                    a.href = part.link;
+                    a.target = "_blank";
+                } else {
+                    a.href = "#";
+                    a.classList.add('btn-disabled'); // Tự động xám nếu không có link
+                    a.innerText += " (Chưa có)";
+                }
+                subMenu.appendChild(a);
+            });
+
+            switchView('view-subject');
+        }
+
+        function showHistory() {
+            filterHistory();
+            switchView('view-history');
+        }
+
+        function filterHistory() {
+            const filterVal = document.getElementById('subject-filter').value;
+            const historyContainer = document.getElementById('history-content');
+            historyContainer.innerHTML = '';
+
+            const filteredData = historyData.filter(item => {
+                return filterVal === 'all' || item.subject === filterVal;
+            });
+
+            if (filteredData.length === 0) {
+                historyContainer.innerHTML = '<div class="history-item">Chưa có cập nhật nào.</div>';
+                return;
+            }
+
+            filteredData.forEach(item => {
+                let div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `<span>[${item.subject}]</span> ${item.time}<br>${item.content}`;
+                historyContainer.appendChild(div);
+            });
+        }
+
+        function switchView(viewId) {
+            // Ẩn tất cả view
+            ['view-home', 'view-subject', 'view-history'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.add('hidden');
+                el.classList.remove('fade-in-up'); // Reset animation
+            });
+
+            // Hiện view đích và thêm animation
+            const target = document.getElementById(viewId);
+            target.classList.remove('hidden');
+            
+            // Trigger reflow để chạy lại animation (hack nhỏ)
+            void target.offsetWidth; 
+            
+            target.classList.add('fade-in-up');
+        }
+
+        function goHome() {
+            switchView('view-home');
+        }
+
+        // Hiệu ứng tuyết rơi
+        function createSnowflake() {
+            const snowflake = document.createElement('div');
+            snowflake.classList.add('snowflake');
+            snowflake.textContent = '❄';
+            
+            snowflake.style.left = Math.random() * window.innerWidth + 'px';
+            const size = Math.random() * 10 + 8;
+            snowflake.style.fontSize = size + 'px';
+            snowflake.style.opacity = Math.random() * 0.7 + 0.3;
+            
+            document.body.appendChild(snowflake);
+
+            const endTop = window.innerHeight + size + 50;
+            const duration = Math.random() * 1000 + 3000;
+
+            const animation = snowflake.animate([
+                { transform: `translateY(0px) rotate(0deg)` },
+                { transform: `translateY(${endTop}px) rotate(${Math.random() * 360}deg)` }
+            ], {
+                duration: duration,
+                easing: 'linear'
+            });
+
+            animation.onfinish = () => {
+                snowflake.remove();
+            };
+        }
+
+        setInterval(createSnowflake, 250);
+
+        initApp();
+
+    </script>
+</body>
+</html>
