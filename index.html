@@ -14,7 +14,7 @@
             --btn-subject-text: #0f2027;
             --btn-back: #ef5350;
             --btn-history: #ffa726;
-            --btn-disabled: #546e7a; /* Màu xám cho nút bị khóa */
+            --btn-disabled: #546e7a;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
@@ -27,7 +27,7 @@
             justify-content: center;
             align-items: center;
             color: var(--text-color);
-            overflow: hidden; /* Ngăn thanh cuộn body */
+            overflow: hidden;
             position: relative;
         }
 
@@ -44,7 +44,7 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.37);
             z-index: 10;
             max-height: 90vh;
-            overflow-y: auto; /* Cuộn nội dung bên trong container */
+            overflow-y: auto;
         }
         
         .container::-webkit-scrollbar { width: 0; background: transparent; }
@@ -73,32 +73,22 @@
         .btn-history { background-color: var(--btn-history); color: #fff; margin-top: 10px;}
         .btn-back { background-color: var(--btn-back); color: #fff; margin-top: 20px; }
 
-        /* Class màu xám - không nhấn được */
         .btn-disabled {
             background-color: var(--btn-disabled) !important;
             color: #cfd8dc !important;
             cursor: not-allowed;
-            pointer-events: none; /* Chặn click chuột */
+            pointer-events: none;
             opacity: 0.7;
             box-shadow: none;
         }
 
         .hidden { display: none !important; }
 
-        /* Hiệu ứng chuyển cảnh mượt mà */
-        .fade-in-up {
-            animation: fadeInUp 0.4s ease-out forwards;
-        }
+        .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
 
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .filter-box {
@@ -146,8 +136,7 @@
         
         <div id="view-home" class="fade-in-up">
             <h1>AZOTA CKI <br><span style="font-size: 1rem; font-weight: 400;">2025-2026</span></h1>
-            <div class="grid-menu" id="main-menu">
-                </div>
+            <div class="grid-menu" id="main-menu"></div>
             <button class="btn btn-history" onclick="showHistory()">⏳ Lịch sử thay đổi đáp án</button>
         </div>
 
@@ -206,7 +195,6 @@
                     { name: "FULL", link: "" }
                 ]
             },
-            // CÁC MÔN BÊN DƯỚI ĐANG BỊ KHÓA (locked: true)
             "Địa Lý": {
                 name: "Địa lý 🌍",
                 locked: true, 
@@ -247,7 +235,7 @@
         ];
 
         // ==========================================
-        // XỬ LÝ GIAO DIỆN (LOGIC)
+        // XỬ LÝ GIAO DIỆN
         // ==========================================
 
         function initApp() {
@@ -257,21 +245,18 @@
             for (let key in subjectConfig) {
                 const data = subjectConfig[key];
                 
-                // Tạo nút môn học
                 let btn = document.createElement('button');
                 btn.className = 'btn btn-subject';
                 btn.innerHTML = data.name;
 
-                // Kiểm tra xem có bị khóa không
                 if (data.locked === true) {
-                    btn.classList.add('btn-disabled'); // Thêm class xám
+                    btn.classList.add('btn-disabled');
                 } else {
                     btn.onclick = () => openSubject(key);
                 }
                 
                 mainMenu.appendChild(btn);
 
-                // Thêm vào bộ lọc lịch sử
                 let option = document.createElement('option');
                 option.value = key;
                 option.text = data.name;
@@ -292,10 +277,10 @@
                 
                 if (part.link && part.link.trim() !== "") {
                     a.href = part.link;
-                    a.target = "_blank";
+                    a.target = "_blank"; // QUAN TRỌNG: Mở link trong tab mới
                 } else {
                     a.href = "#";
-                    a.classList.add('btn-disabled'); // Tự động xám nếu không có link
+                    a.classList.add('btn-disabled');
                     a.innerText += " (Chưa có)";
                 }
                 subMenu.appendChild(a);
@@ -332,20 +317,15 @@
         }
 
         function switchView(viewId) {
-            // Ẩn tất cả view
             ['view-home', 'view-subject', 'view-history'].forEach(id => {
                 const el = document.getElementById(id);
                 el.classList.add('hidden');
-                el.classList.remove('fade-in-up'); // Reset animation
+                el.classList.remove('fade-in-up');
             });
 
-            // Hiện view đích và thêm animation
             const target = document.getElementById(viewId);
             target.classList.remove('hidden');
-            
-            // Trigger reflow để chạy lại animation (hack nhỏ)
             void target.offsetWidth; 
-            
             target.classList.add('fade-in-up');
         }
 
@@ -353,7 +333,9 @@
             switchView('view-home');
         }
 
-        // Hiệu ứng tuyết rơi
+        // ==========================================
+        // TUYẾT RƠI (Đã chỉnh chậm lại)
+        // ==========================================
         function createSnowflake() {
             const snowflake = document.createElement('div');
             snowflake.classList.add('snowflake');
@@ -367,7 +349,10 @@
             document.body.appendChild(snowflake);
 
             const endTop = window.innerHeight + size + 50;
-            const duration = Math.random() * 1000 + 3000;
+            
+            // CHỈNH SỬA TỐC ĐỘ Ở ĐÂY:
+            // Từ 10000ms (10s) đến 15000ms (15s) -> Rất chậm
+            const duration = Math.random() * 5000 + 10000; 
 
             const animation = snowflake.animate([
                 { transform: `translateY(0px) rotate(0deg)` },
@@ -382,7 +367,8 @@
             };
         }
 
-        setInterval(createSnowflake, 250);
+        // Tăng thời gian tạo tuyết lên 500ms để tránh quá nhiều tuyết trên màn hình
+        setInterval(createSnowflake, 500);
 
         initApp();
 
